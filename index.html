@@ -72,7 +72,7 @@
     .cal-day {
       aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center;
       font-size: 0.82rem; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent;
-      background: rgba(255,255,255,0.03);
+      background: rgba(255,255,255,0.03); flex-direction: column;
     }
     .cal-day:hover:not(.empty):not(.past) { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
     .cal-day.empty { cursor: default; background: transparent; }
@@ -127,7 +127,7 @@
 
 <div class="github-status" id="github-status">
   <div class="dot-status" id="status-dot"></div>
-  <span id="github-status-text">Connexion à GitHub...</span>
+  <span id="github-status-text">Connexion…</span>
 </div>
 
 <div class="section">
@@ -167,16 +167,16 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const REPO_OWNER = 'Quentib';
-const REPO_NAME  = 'vacances-dream-team';
-const FILE_PATH  = 'dates.json';
-const GH_TOKEN   = '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';
-const RAW        = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/`;
+// ─── CONFIG JSONBin ───
+const BIN_ID  = '69cec69d36566621a873844a';
+const API_KEY = '$2a$10$lOBxi6B1nscATtJT7dJtnu/DaHH3/nPs4i7UwUQPRhDVmz/Tso4lW';
+
+const RAW = 'https://raw.githubusercontent.com/Quentib/vacances-dream-team/main/';
 
 const PEOPLE = [
-  { name: 'Quentin', color: '#4d96ff', glow: 'rgba(77,150,255,0.4)', photo: RAW + 'Quentin.jpeg' },
+  { name: 'Quentin', color: '#4d96ff', glow: 'rgba(77,150,255,0.4)',   photo: RAW + 'Quentin.jpeg' },
   { name: 'Gabriel', color: '#ff6b6b', glow: 'rgba(255,107,107,0.4)', photo: RAW + 'Gabriel.jpeg' },
-  { name: 'Mathis',  color: '#ffd93d', glow: 'rgba(255,217,61,0.4)',  photo: RAW + 'Mathis.jpeg'  },
+  { name: 'Mathis',  color: '#ffd93d', glow: 'rgba(255,217,61,0.4)',   photo: RAW + 'Mathis.jpeg'  },
   { name: 'Vincent', color: '#6bcb77', glow: 'rgba(107,203,119,0.4)', photo: RAW + 'Vincent.jpeg' },
 ];
 
@@ -189,40 +189,39 @@ const GALLERY_PHOTOS = [
   RAW + 'Resto.jpeg',
 ];
 
-let currentUser  = null;
-let selections   = {};
-let fileSha      = null;
-let calYear      = 2026;
-let calMonth     = 7; // 0-indexed = août
+let currentUser = null;
+let selections  = {};
+let calYear     = 2026;
+let calMonth    = 7; // août
 
-// ─── GITHUB ───
-async function ghGet() {
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-  const r = await fetch(url, { headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }});
+// ─── JSONBin API ───
+async function binGet() {
+  const r = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+    headers: { 'X-Master-Key': API_KEY }
+  });
   if (!r.ok) throw new Error('GET failed');
   const json = await r.json();
-  fileSha = json.sha;
-  return JSON.parse(atob(json.content.replace(/\n/g,'')));
+  return json.record.selections || {};
 }
 
-async function ghPut(data) {
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-  const body = { message: `Update dispos`, content: btoa(JSON.stringify(data, null, 2)), sha: fileSha };
-  const r = await fetch(url, { method: 'PUT', headers: { Authorization: `token ${GH_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+async function binPut(sel) {
+  const r = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+    body: JSON.stringify({ selections: sel })
+  });
   if (!r.ok) throw new Error('PUT failed');
-  const json = await r.json();
-  fileSha = json.content.sha;
 }
 
 // ─── INIT ───
 async function init() {
   setStatus('loading');
   try {
-    const data = await ghGet();
-    selections = data.selections || {};
+    selections = await binGet();
     setStatus('ok');
   } catch(e) {
     setStatus('err');
+    showToast('❌ Impossible de charger les données');
   }
   renderProfiles();
   renderGallery();
@@ -233,9 +232,9 @@ function setStatus(s) {
   const dot  = document.getElementById('status-dot');
   const text = document.getElementById('github-status-text');
   dot.className = 'dot-status ' + s;
-  if (s === 'loading') text.textContent = 'Connexion à GitHub…';
-  if (s === 'ok')      text.textContent = 'Synchronisé avec GitHub ✓';
-  if (s === 'err')     text.textContent = 'Hors ligne — vérifiez le token/dates.json';
+  if (s === 'loading') text.textContent = 'Chargement des dispos…';
+  if (s === 'ok')      text.textContent = 'Synchronisé ✓';
+  if (s === 'err')     text.textContent = 'Erreur de connexion ✗';
 }
 
 // ─── PROFILES ───
@@ -278,20 +277,19 @@ function renderCalendar() {
   label.textContent = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  let startDay = date.getDay(); // 0=dim
-  startDay = startDay === 0 ? 6 : startDay - 1; // lundi=0
+  let startDay = date.getDay();
+  startDay = startDay === 0 ? 6 : startDay - 1;
 
-  const myDates   = new Set(selections[currentUser.name] || []);
-  const today     = new Date(); today.setHours(0,0,0,0);
+  const myDates = new Set(selections[currentUser.name] || []);
+  const today   = new Date(); today.setHours(0,0,0,0);
 
   const dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   grid.innerHTML = '';
   dayNames.forEach(d => { grid.innerHTML += `<div class="cal-day-name">${d}</div>`; });
-
   for (let i = 0; i < startDay; i++) grid.innerHTML += `<div class="cal-day empty"></div>`;
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const key  = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const key      = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const thisDate = new Date(calYear, calMonth, d);
     const isPast   = thisDate < today;
     const isMine   = myDates.has(key);
@@ -299,12 +297,13 @@ function renderCalendar() {
     const isAll    = isMine && othersCount === PEOPLE.length - 1;
 
     let cls = 'cal-day';
-    if (isPast)  cls += ' past';
-    else if (isAll)   cls += ' all-selected';
-    else if (isMine)  cls += ' selected';
+    if (isPast)        cls += ' past';
+    else if (isAll)    cls += ' all-selected';
+    else if (isMine)   cls += ' selected';
     else if (othersCount > 0) cls += ' others-selected';
 
-    const dots = PEOPLE.filter(p => p.name !== currentUser.name && (selections[p.name]||[]).includes(key))
+    const dots = PEOPLE
+      .filter(p => p.name !== currentUser.name && (selections[p.name]||[]).includes(key))
       .map(p => `<div class="dot" style="background:${p.color}"></div>`).join('');
 
     const div = document.createElement('div');
@@ -326,8 +325,12 @@ function toggleDay(key) {
   renderProfiles();
 }
 
-document.getElementById('cal-prev').onclick = () => { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); };
-document.getElementById('cal-next').onclick = () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); };
+document.getElementById('cal-prev').onclick = () => {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar();
+};
+document.getElementById('cal-next').onclick = () => {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar();
+};
 
 // ─── SAVE ───
 async function saveDates() {
@@ -335,12 +338,18 @@ async function saveDates() {
   const btn = document.getElementById('save-btn');
   btn.disabled = true; btn.textContent = '⏳ Sauvegarde en cours…';
   try {
-    await ghPut({ selections });
-    showToast(`✅ Dates de ${currentUser.name} sauvegardées sur GitHub !`);
+    // Recharger d'abord pour ne pas écraser les autres
+    const latest = await binGet();
+    latest[currentUser.name] = selections[currentUser.name] || [];
+    await binPut(latest);
+    selections = latest;
+    showToast(`✅ Dates de ${currentUser.name} sauvegardées !`);
     btn.textContent = '✅ Sauvegardé !';
+    renderProfiles();
+    renderSummary();
     setTimeout(() => { btn.disabled = false; btn.textContent = '💾 Sauvegarder mes dates'; }, 3000);
   } catch(e) {
-    showToast('❌ Erreur de sauvegarde — vérifie le token');
+    showToast('❌ Erreur de sauvegarde');
     btn.disabled = false; btn.textContent = '💾 Sauvegarder mes dates';
   }
 }
