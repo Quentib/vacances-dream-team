@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌴 Vacances Dream Team</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 40%, #16213e 70%, #0f3460 100%);
+      min-height: 100vh;
+      padding: 32px 16px 60px;
+      color: #fff;
+    }
+
+    /* ── HEADER ── */
+    .hero { text-align: center; margin-bottom: 40px; }
+    .hero h1 {
+      font-size: 2.4rem; font-weight: 900; letter-spacing: 2px;
+      background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 8px;
+    }
+    .hero p { font-size: 1.1rem; color: rgba(255,255,255,0.5); font-style: italic; letter-spacing: 1px; }
+
+    /* ── SECTIONS ── */
+    .section { max-width: 820px; margin: 0 auto 28px; }
+    .section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.35); margin-bottom: 14px; padding-left: 2px; }
+
+    /* ── PROFILES ── */
+    .profiles-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 600px) { .profiles-grid { grid-template-columns: repeat(2, 1fr); } .hero h1 { font-size: 1.7rem; } }
+
+    .profile-card {
+      background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 20px 12px 16px; text-align: center;
+      cursor: pointer; transition: all 0.25s ease; position: relative; user-select: none;
+    }
+    .profile-card:hover { background: rgba(255,255,255,0.1); transform: translateY(-3px); }
+    .profile-card.selected {
+      border-color: var(--color); background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 28px -4px var(--color), inset 0 0 24px -12px var(--color);
+      transform: translateY(-4px);
+    }
+    .profile-card.selected::after {
+      content: '✓'; position: absolute; top: -10px; right: -10px;
+      width: 26px; height: 26px; background: var(--color); border-radius: 50%;
+      font-size: 0.8rem; font-weight: 900; display: flex; align-items: center;
+      justify-content: center; color: #000; line-height: 26px;
+    }
+    .avatar-wrap { position: relative; width: 80px; height: 80px; margin: 0 auto 12px; }
+    .avatar-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color); display: block; }
+    .avatar-initial {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--color), var(--color-dark));
+      border: 3px solid var(--color); display: flex; align-items: center;
+      justify-content: center; font-size: 2rem; font-weight: 900;
+      color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .change-photo-btn {
+      position: absolute; bottom: -4px; right: -4px; width: 26px; height: 26px;
+      background: rgba(20,20,40,0.95); border: 2px solid var(--color); border-radius: 50%;
+      font-size: 0.75rem; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; transition: transform 0.2s; z-index: 2;
+    }
+    .change-photo-btn:hover { transform: scale(1.2); }
+    .profile-name { font-weight: 700; font-size: 1rem; color: #fff; }
+    .profile-days { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px; }
+    .profile-color-bar { width: 40px; height: 4px; border-radius: 2px; background: var(--color); margin: 8px auto 0; }
+    .file-input { display: none; }
+
+    /* ── CALENDAR ── */
+    .calendar-wrap { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; }
+    .cal-month { text-align: center; font-weight: 700; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
+    .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+    .cal-day-label { text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 0; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-cell {
+      min-height: 64px; background: rgba(255,255,255,0.04); border-radius: 10px;
+      padding: 6px 4px 4px; cursor: pointer; transition: background 0.15s;
+      position: relative; border: 2px solid transparent; display: flex;
+      flex-direction: column; align-items: center;
+    }
+    .cal-cell:hover { background: rgba(255,255,255,0.1); }
+    .cal-cell.empty { background: transparent; border: none; cursor: default; }
+    .cal-cell.my-selected { border-color: var(--selected-color, #fff); }
+    .cal-cell.all-available { background: rgba(100,220,130,0.12); border-color: #64dc82; }
+    .cal-cell .day-num { font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+    .cal-cell .dots { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
+    .cal-cell .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .all-badge { position: absolute; top: 3px; right: 3px; font-size: 0.55rem; background: #64dc82; color: #000; border-radius: 3px; padding: 1px 3px; font-weight: 900; }
+    .cal-hint { text-align: center; color: rgba(255,255,255,0.3); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+
+    /* ── ACTIONS ── */
+    .actions-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .actions-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { border: none; border-radius: 10px; padding: 12px 22px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px; }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(135deg, #00c9ff, #0077b6); color: #fff; }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.12); }
+    .btn-wa { background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; flex: 1; }
+    .btn-copy { background: linear-gradient(135deg, #f72585, #b5179e); color: #fff; flex: 1; }
+
+    /* ── SHARE BOX ── */
+    .share-box {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .share-box-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.35); }
+    .share-btns { display: flex; gap: 10px; }
+    .share-divider { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.2); font-size: 0.8rem; }
+    .share-divider::before, .share-divider::after { content: ''; flex: 1; border-top: 1px solid rgba(255,255,255,0.1); }
+    .import-row { display: flex; gap: 8px; }
+    .import-input {
+      flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; color: #fff; padding: 10px 14px; font-size: 0.85rem;
+      outline: none; font-family: monospace; transition: border 0.2s;
+    }
+    .import-input::placeholder { color: rgba(255,255,255,0.25); }
+    .import-input:focus { border-color: #4d96ff; }
+    .btn-import { background: rgba(77,150,255,0.2); color: #4d96ff; border: 1px solid #4d96ff; border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .btn-import:hover { background: rgba(77,150,255,0.35); }
+    .import-hint { font-size: 0.78rem; color: rgba(255,255,255,0.3); }
+
+    /* ── SUMMARY ── */
+    .summary-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .summary-pill { background: rgba(100,220,130,0.12); border: 1px solid #64dc82; border-radius: 999px; padding: 8px 18px; font-size: 0.88rem; display: flex; align-items: center; gap: 10px; }
+    .summary-pill .pill-date { font-weight: 700; }
+    .summary-pill .pill-count { color: #64dc82; font-size: 0.78rem; }
+
+    /* ── GALLERY ── */
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 500px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+    .gallery-slot {
+      aspect-ratio: 4/3; border-radius: 14px; overflow: hidden; position: relative;
+      cursor: pointer; border: 2px dashed rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.04); transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 6px; color: rgba(255,255,255,0.25); font-size: 0.82rem;
+    }
+    .gallery-slot:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.08); }
+    .gallery-slot.has-photo { border: none; }
+    .gallery-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-slot .add-icon { font-size: 1.8rem; }
+    .gallery-remove { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; background: rgba(0,0,0,0.6); border-radius: 50%; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; z-index: 2; }
+    .gallery-slot:hover .gallery-remove { opacity: 1; }
+    .drag-over { border-color: #ffd93d !important; background: rgba(255,217,61,0.08) !important; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: #fff; color: #000; padding: 12px 28px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>🌴 Vacances Dream Team</h1>
+  <p>Cet été, on s'envoie en enfer</p>
+</div>
+
+<!-- T'ES QUI -->
+<div class="section">
+  <div class="section-title">T'es qui ?</div>
+  <div class="profiles-grid" id="profiles-grid"></div>
+</div>
+
+<!-- CALENDRIER -->
+<div class="section">
+  <div class="section-title">Vos dispos pour août 📅</div>
+  <div class="calendar-wrap">
+    <div class="cal-month">Août 2026 &nbsp;·&nbsp; 3 → 28</div>
+    <div class="cal-header" id="cal-header"></div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <p class="cal-hint" id="cal-hint">Sélectionne ton prénom ci-dessus pour cocher tes dates 👆</p>
+  </div>
+</div>
+
+<!-- ACTIONS -->
+<div class="section">
+  <div class="section-title">LET'S GOOO ! 🍔</div>
+  <div class="actions-wrap">
+    <div class="actions-row">
+      <button class="btn btn-primary" onclick="saveParticipant()">✅ Valider mes dispo</button>
+      <button class="btn btn-secondary" onclick="clearMyDates()">🗑️ Effacer mes dates</button>
+    </div>
+  </div>
+</div>
+
+<!-- PARTAGE -->
+<div class="section">
+  <div class="section-title">📤 Partager dans le groupe</div>
+  <div class="share-box">
+    <div class="share-box-title">1 — Envoie ton code de dispos</div>
+    <div class="share-btns">
+      <button class="btn btn-copy" onclick="copyCode()">📋 Copier mon code</button>
+      <button class="btn btn-wa" onclick="shareWhatsApp()">📱 Envoyer par WhatsApp</button>
+    </div>
+    <div class="share-divider">ou</div>
+    <div class="share-box-title">2 — Charge le code d'un pote (colle-le ici)</div>
+    <div class="import-row">
+      <input class="import-input" id="import-input" type="text" placeholder="Colle le code ici..." />
+      <button class="btn-import" onclick="importCode()">Charger ✓</button>
+    </div>
+    <div class="import-hint">Le code contient les dispos de tout le monde. Chacun colle le dernier code reçu dans le groupe, ajoute ses dates et renvoie le nouveau code.</div>
+  </div>
+</div>
+
+<!-- RÉSUMÉ -->
+<div class="section" id="summary-section" style="display:none">
+  <div class="section-title">🟢 Meilleures dates communes</div>
+  <div class="summary-pills" id="summary-pills"></div>
+</div>
+
+<!-- GALERIE -->
+<div class="section">
+  <div class="section-title">📸 Nos souvenirs — glisse tes photos ici</div>
+  <div class="gallery-grid" id="gallery-grid"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" accept="image/*" class="file-input" id="global-file-input" />
+<input type="file" accept="image/*" class="file-input" id="gallery-file-input" multiple />
+
+<script>
+// ─────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────
+const PEOPLE = [
+  { name: 'Quentin', color: '#FF6B6B', colorDark: '#c0392b', initial: 'Q' },
+  { name: 'Gabriel', color: '#FFB347', colorDark: '#e67e22', initial: 'G' },
+  { name: 'Mathis',  color: '#48dbfb', colorDark: '#0abde3', initial: 'M' },
+  { name: 'Vincent', color: '#ff9ff3', colorDark: '#be2edd', initial: 'V' },
+];
+const START_DAY = 3, END_DAY = 28, YEAR = 2026, MONTH = 7;
+const DAY_NAMES = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const LS_PHOTOS  = 'dreamteam_photos_v1';
+const LS_GALLERY = 'dreamteam_gallery_v1';
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let selectedIdx   = null;
+let myDates       = new Set();
+let participants  = [];
+let profilePhotos = {};
+let galleryPhotos = [];
+let pendingPhotoTarget = null;
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+function init() {
+  loadFromStorage();
+  renderProfiles();
+  renderCalendarHeader();
+  renderCalendar();
+  renderGallery();
+  renderSummary();
+  setupFileInputs();
+}
+
+// ─────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────
+function loadFromStorage() {
+  try { profilePhotos = JSON.parse(localStorage.getItem(LS_PHOTOS)  || '{}'); } catch(e) {}
+  try { galleryPhotos = JSON.parse(localStorage.getItem(LS_GALLERY) || '[]'); } catch(e) {}
+  try {
+    const saved = JSON.parse(localStorage.getItem('dreamteam_state_v1') || 'null');
+    if (saved && saved.participants) participants = saved.participants;
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem('dreamteam_state_v1', JSON.stringify({ participants }));
+}
+
+function saveStorage() {
+  localStorage.setItem(LS_PHOTOS,  JSON.stringify(profilePhotos));
+  localStorage.setItem(LS_GALLERY, JSON.stringify(galleryPhotos));
+}
+
+// ─────────────────────────────────────────
+// CODE ENCODE / DECODE
+// ─────────────────────────────────────────
+function encodeState() {
+  return btoa(unescape(encodeURIComponent(JSON.stringify({ participants }))));
+}
+
+function decodeState(code) {
+  return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+}
+
+// ─────────────────────────────────────────
+// PROFILES
+// ─────────────────────────────────────────
+function renderProfiles() {
+  const grid = document.getElementById('profiles-grid');
+  grid.innerHTML = '';
+  PEOPLE.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'profile-card' + (selectedIdx === i ? ' selected' : '');
+    card.style.setProperty('--color', p.color);
+    card.style.setProperty('--color-dark', p.colorDark);
+    card.onclick = () => selectProfile(i);
+
+    const saved = participants.find(s => s.name === p.name);
+    const daysCount = saved ? saved.dates.length : (selectedIdx === i ? myDates.size : 0);
+    const daysLabel = daysCount > 0 ? `${daysCount} jour${daysCount > 1 ? 's' : ''} cochés` : 'Pas encore de dispo';
+    const photoKey = p.name.toLowerCase();
+    const photoSrc = profilePhotos[photoKey];
+
+    card.innerHTML = `
+      <div class="avatar-wrap">
+        ${photoSrc
+          ? `<img class="avatar-img" src="${photoSrc}" alt="${p.name}" />`
+          : `<div class="avatar-initial" style="--color:${p.color};--color-dark:${p.colorDark}">${p.initial}</div>`
+        }
+        <div class="change-photo-btn" onclick="openPhotoUpload(event,${i})" title="Changer la photo">📷</div>
+      </div>
+      <div class="profile-name">${p.name}</div>
+      <div class="profile-days">${daysLabel}</div>
+      <div class="profile-color-bar" style="background:${p.color}"></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function selectProfile(idx) {
+  if (selectedIdx !== idx) {
+    const saved = participants.find(p => p.name === PEOPLE[idx].name);
+    myDates = saved ? new Set(saved.dates) : new Set();
+    selectedIdx = idx;
+  }
+  renderProfiles();
+  renderCalendar();
+  document.getElementById('cal-hint').style.display = 'none';
+}
+
+function openPhotoUpload(e, idx) {
+  e.stopPropagation();
+  pendingPhotoTarget = 'profile_' + idx;
+  document.getElementById('global-file-input').click();
+}
+
+// ────────────────────────────────────────
+// CALENDAR
+// ─────────────────────────────────────────
+function getWeekday(day) { return (new Date(YEAR, MONTH, day).getDay() + 6) % 7; }
+
+function renderCalendarHeader() {
+  const header = document.getElementById('cal-header');
+  header.innerHTML = '';
+  DAY_NAMES.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-label';
+    el.textContent = d;
+    header.appendChild(el);
+  });
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+  const selectedColor = selectedIdx !== null ? PEOPLE[selectedIdx].color : '#ffffff';
+  document.documentElement.style.setProperty('--selected-color', selectedColor);
+
+  const startWd = getWeekday(START_DAY);
+  for (let i = 0; i < startWd; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'cal-cell empty';
+    grid.appendChild(empty);
+  }
+
+  const total = participants.length;
+
+  for (let day = START_DAY; day <= END_DAY; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell';
+    if (myDates.has(day)) cell.classList.add('my-selected');
+
+    const dotsData = participants.filter(p => p.dates.includes(day));
+    const allHave = total >= 2 && dotsData.length === total;
+    if (allHave) cell.classList.add('all-available');
+
+    const dayNum = document.createElement('div');
+    dayNum.className = 'day-num';
+    dayNum.textContent = `${DAY_NAMES[getWeekday(day)][0]} ${day}`;
+    cell.appendChild(dayNum);
+
+    const dotsEl = document.createElement('div');
+    dotsEl.className = 'dots';
+
+    dotsData.forEach(p => {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.background = p.color;
+      dot.title = p.name;
+      dotsEl.appendChild(dot);
+    });
+
+    if (selectedIdx !== null && myDates.has(day)) {
+      const pName = PEOPLE[selectedIdx].name;
+      if (!participants.find(p => p.name === pName)) {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.background = PEOPLE[selectedIdx].color;
+        dot.style.opacity = '0.5';
+        dot.style.outline = `2px dashed ${PEOPLE[selectedIdx].color}`;
+        dot.style.outlineOffset = '1px';
+        dotsEl.appendChild(dot);
+      }
+    }
+
+    cell.appendChild(dotsEl);
+    if (allHave) {
+      const badge = document.createElement('div');
+      badge.className = 'all-badge';
+      badge.textContent = '✓';
+      cell.appendChild(badge);
+    }
+
+    const d = day;
+    cell.onclick = () => toggleDate(d);
+    grid.appendChild(cell);
+  }
+}
+
+function toggleDate(day) {
+  if (selectedIdx === null) { showToast('👆 Sélectionne ton prénom d\'abord !'); return; }
+  if (myDates.has(day)) myDates.delete(day); else myDates.add(day);
+  renderCalendar();
+  renderProfiles();
+}
+
+// ─────────────────────────────────────────
+// SAVE / CLEAR
+// ─────────────────────────────────────────
+function saveParticipant() {
+  if (selectedIdx === null) { showToast('👆 Sélectionne ton prénom !'); return; }
+  if (myDates.size === 0)   { showToast('📅 Coche au moins une date !'); return; }
+  const p = PEOPLE[selectedIdx];
+  const entry = { name: p.name, color: p.color, dates: [...myDates].sort((a,b)=>a-b) };
+  const idx = participants.findIndex(x => x.name === p.name);
+  if (idx >= 0) participants[idx] = entry; else participants.push(entry);
+  saveState();
+  renderProfiles();
+  renderCalendar();
+  renderSummary();
+  showToast(`✅ ${p.name} enregistré — ${myDates.size} jour${myDates.size > 1 ? 's' : ''} !`);
+}
+
+function clearMyDates() {
+  myDates.clear();
+  renderCalendar();
+  renderProfiles();
+  showToast('🗑️ Dates effacées');
+}
+
+// ─────────────────────────────────────────
+// SHARE
+// ─────────────────────────────────────────
+async function copyCode() {
+  if (participants.length === 0) { showToast('⚠️ Valide tes dispos d\'abord !'); return; }
+  const code = encodeState();
+  try {
+    await navigator.clipboard.writeText(code);
+    showToast('📋 Code copié ! Colle-le dans le groupe 🎉');
+  } catch {
+    // Fallback: show a textarea
+    const ta = document.createElement('textarea');
+    ta.value = code;
+    ta.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;max-width:500px;height:100px;z-index:9999;padding:10px;font-family:monospace;font-size:12px;border-radius:8px;border:2px solid #4d96ff;background:#1a1a2e;color:#fff;';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    setTimeout(() => document.body.removeChild(ta), 3000);
+    showToast('📋 Code copié — sinon sélectionne tout dans la zone de texte');
+  }
+}
+
+function shareWhatsApp() {
+  if (participants.length === 0) { showToast('⚠️ Valide tes dispos d\'abord !'); return; }
+  const code = encodeState();
+  const names = participants.map(p => p.name).join(', ');
+  const text = `🌴 Vacances Dream Team — dispos de ${names}\n\nColle ce code dans l'app :\n${code}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+function importCode() {
+  const raw = document.getElementById('import-input').value.trim();
+  if (!raw) { showToast('⚠️ Colle un code d\'abord !'); return; }
+  try {
+    const data = decodeState(raw);
+    if (!data.participants) throw new Error('Format invalide');
+    // Merge: imported participants override existing ones with same name
+    data.participants.forEach(imported => {
+      const idx = participants.findIndex(p => p.name === imported.name);
+      if (idx >= 0) participants[idx] = imported; else participants.push(imported);
+    });
+    saveState();
+    document.getElementById('import-input').value = '';
+    renderProfiles();
+    renderCalendar();
+    renderSummary();
+    const names = data.participants.map(p => p.name).join(', ');
+    showToast(`✅ Dispos de ${names} chargées !`);
+  } catch(e) {
+    showToast('❌ Code invalide, vérifie que tu as tout copié');
+  }
+}
+
+// ─────────────────────────────────────────
+// SUMMARY
+// ─────────────────────────────────────────
+function renderSummary() {
+  const section = document.getElementById('summary-section');
+  const pills   = document.getElementById('summary-pills');
+  if (participants.length < 2) { section.style.display = 'none'; return; }
+  const dayCount = {};
+  for (let d = START_DAY; d <= END_DAY; d++) {
+    const c = participants.filter(p => p.dates.includes(d)).length;
+    if (c > 0) dayCount[d] = c;
+  }
+  if (!Object.keys(dayCount).length) { section.style.display = 'none'; return; }
+  const max = Math.max(...Object.values(dayCount));
+  const best = Object.entries(dayCount).filter(([,c]) => c === max).map(([d]) => parseInt(d)).sort((a,b)=>a-b);
+  const ranges = []; let s = best[0], e = best[0];
+  for (let i = 1; i < best.length; i++) {
+    if (best[i] === e+1) { e = best[i]; } else { ranges.push([s,e]); s = e = best[i]; }
+  }
+  ranges.push([s,e]);
+  section.style.display = 'block';
+  pills.innerHTML = '';
+  ranges.forEach(([s,e]) => {
+    const label = s === e
+      ? `${DAY_NAMES[getWeekday(s)]} ${s} août`
+      : `${DAY_NAMES[getWeekday(s)]} ${s} → ${DAY_NAMES[getWeekday(e)]} ${e} août`;
+    pills.innerHTML += `<div class="summary-pill"><span class="pill-date">${label}</span><span class="pill-count">${max}/${participants.length} 🟢</span></div>`;
+  });
+}
+
+// ─────────────────────────────────────────
+// GALLERY
+// ─────────────────────────────────────────
+const MAX_GALLERY = 6;
+
+function renderGallery() {
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '';
+  galleryPhotos.forEach((src, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'gallery-slot has-photo';
+    slot.innerHTML = `<img src="${src}" alt="souvenir" /><div class="gallery-remove" onclick="removeGalleryPhoto(${i})">✕</div>`;
+    grid.appendChild(slot);
+  });
+  const remaining = MAX_GALLERY - galleryPhotos.length;
+  for (let i = 0; i < remaining; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'gallery-slot';
+    slot.innerHTML = `<div class="add-icon">📷</div><span>Glisse une photo</span>`;
+    slot.onclick = () => { pendingPhotoTarget = 'gallery'; document.getElementById('gallery-file-input').click(); };
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+    slot.addEventListener('drop', e => { e.preventDefault(); slot.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) readFileAsGallery(f); });
+    grid.appendChild(slot);
+  }
+}
+
+function removeGalleryPhoto(idx) { galleryPhotos.splice(idx, 1); saveStorage(); renderGallery(); }
+
+function readFileAsGallery(file) {
+  const reader = new FileReader();
+  reader.onload = e => { galleryPhotos.push(e.target.result); saveStorage(); renderGallery(); showToast('📸 Photo ajoutée !'); };
+  reader.readAsDataURL(file);
+}
+
+// ─────────────────────────────────────────
+// FILE INPUTS
+// ─────────────────────────────────────────
+function setupFileInputs() {
+  document.getElementById('global-file-input').addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    if (pendingPhotoTarget && pendingPhotoTarget.startsWith('profile_')) {
+      const idx = parseInt(pendingPhotoTarget.split('_')[1]);
+      const reader = new FileReader();
+      reader.onload = e => { profilePhotos[PEOPLE[idx].name.toLowerCase()] = e.target.result; saveStorage(); renderProfiles(); showToast(`📸 Photo de ${PEOPLE[idx].name} mise à jour !`); };
+      reader.readAsDataURL(file);
+    }
+    this.value = '';
+  });
+  document.getElementById('gallery-file-input').addEventListener('change', function() {
+    [...this.files].forEach(readFileAsGallery); this.value = '';
+  });
+  document.getElementById('profiles-grid').addEventListener('dragover', e => e.preventDefault());
+  document.getElementById('profiles-grid').addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const card = e.target.closest('.profile-card');
+    if (!card) return;
+    const idx = [...document.querySelectorAll('.profile-card')].indexOf(card);
+    if (idx < 0) return;
+    const reader = new FileReader();
+    reader.onload = ev => { profilePhotos[PEOPLE[idx].name.toLowerCase()] = ev.target.result; saveStorage(); renderProfiles(); showToast(`📸 Photo de ${PEOPLE[idx].name} mise à jour !`); };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+init();
+</script>
+</body>
+</html>
