@@ -6,15 +6,11 @@
   <title>🌴 Vacances Dream Team</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: linear-gradient(160deg, #0a0a0a 0%, #1a1a2e 40%, #16213e 70%, #0f3460 100%);
-      min-height: 100vh;
-      padding: 32px 16px 60px;
-      color: #fff;
+      min-height: 100vh; padding: 32px 16px 60px; color: #fff;
     }
-
     .hero { text-align: center; margin-bottom: 40px; }
     .hero h1 {
       font-size: 2.4rem; font-weight: 900; letter-spacing: 2px;
@@ -23,471 +19,378 @@
       background-clip: text; margin-bottom: 8px;
     }
     .hero p { font-size: 1.1rem; color: rgba(255,255,255,0.5); font-style: italic; letter-spacing: 1px; }
-
+    .github-status {
+      max-width: 820px; margin: 0 auto 20px; display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: rgba(255,255,255,0.4);
+    }
+    .dot-status { width: 8px; height: 8px; border-radius: 50%; background: #ffd93d; animation: pulse 1.5s infinite; }
+    .dot-status.ok { background: #6bcb77; animation: none; }
+    .dot-status.err { background: #ff6b6b; animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .section { max-width: 820px; margin: 0 auto 28px; }
     .section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.35); margin-bottom: 14px; padding-left: 2px; }
-
     .profiles-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     @media (max-width: 600px) { .profiles-grid { grid-template-columns: repeat(2, 1fr); } .hero h1 { font-size: 1.7rem; } }
-
     .profile-card {
       background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.08);
       border-radius: 20px; padding: 20px 12px 16px; text-align: center;
       cursor: pointer; transition: all 0.25s ease; position: relative; user-select: none;
     }
     .profile-card:hover { background: rgba(255,255,255,0.1); transform: translateY(-3px); }
-    .profile-card.selected {
-      border-color: var(--color); background: rgba(255,255,255,0.1);
-      box-shadow: 0 0 28px -4px var(--color), inset 0 0 24px -12px var(--color);
-      transform: translateY(-4px);
+    .profile-card.active-user {
+      border-color: var(--color);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.1), 0 0 20px var(--color-glow);
     }
-    .profile-card.selected::after {
-      content: '✓'; position: absolute; top: -10px; right: -10px;
-      width: 26px; height: 26px; background: var(--color); border-radius: 50%;
-      font-size: 0.8rem; font-weight: 900; display: flex; align-items: center;
-      justify-content: center; color: #000; line-height: 26px;
+    .profile-avatar {
+      width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+      margin: 0 auto 10px; display: block;
+      border: 3px solid rgba(255,255,255,0.15);
     }
-    .avatar-wrap { position: relative; width: 80px; height: 80px; margin: 0 auto 12px; }
-    .avatar-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color); display: block; }
-    .avatar-initial {
-      width: 80px; height: 80px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--color), var(--color-dark));
-      border: 3px solid var(--color); display: flex; align-items: center;
-      justify-content: center; font-size: 2rem; font-weight: 900;
-      color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    .profile-name { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+    .profile-badge {
+      display: inline-block; font-size: 0.68rem; padding: 2px 8px;
+      border-radius: 20px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
     }
-    .change-photo-btn {
-      position: absolute; bottom: -4px; right: -4px; width: 26px; height: 26px;
-      background: rgba(20,20,40,0.95); border: 2px solid var(--color); border-radius: 50%;
-      font-size: 0.75rem; cursor: pointer; display: flex; align-items: center;
-      justify-content: center; transition: transform 0.2s; z-index: 2;
+    .profile-badge.done { background: rgba(107,203,119,0.2); color: #6bcb77; }
+    .profile-dates-count { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+    .you-label {
+      position: absolute; top: 10px; right: 10px; font-size: 0.6rem;
+      background: var(--color); color: #000; border-radius: 10px; padding: 2px 6px;
+      font-weight: 800; letter-spacing: 1px;
     }
-    .change-photo-btn:hover { transform: scale(1.2); }
-    .profile-name { font-weight: 700; font-size: 1rem; color: #fff; }
-    .profile-days { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px; }
-    .profile-color-bar { width: 40px; height: 4px; border-radius: 2px; background: var(--color); margin: 8px auto 0; }
-    .file-input { display: none; }
-
-    .calendar-wrap { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; }
-    .cal-month { text-align: center; font-weight: 700; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 14px; }
-    .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
-    .cal-header span { text-align: center; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.3); padding: 4px 0; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-
-    .day {
-      aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600;
-      cursor: pointer; transition: all 0.18s ease; position: relative;
-      background: rgba(255,255,255,0.04); border: 1.5px solid transparent; color: rgba(255,255,255,0.6);
+    .calendar-wrap {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 20px; margin-top: 10px;
     }
-    .day:hover { background: rgba(255,255,255,0.1); }
-    .day.empty { background: transparent; cursor: default; pointer-events: none; }
-    .day.past { opacity: 0.35; cursor: default; pointer-events: none; }
-    .day.today { border-color: rgba(255,255,255,0.4); color: #fff; }
-    .day.selected-day { border-color: var(--active-color, #4d96ff); background: rgba(77,150,255,0.15); color: #fff; }
-    .day.full-match { background: rgba(107,203,119,0.2); border-color: #6bcb77; color: #fff; }
-    .day-dots { display: flex; gap: 2px; margin-top: 2px; flex-wrap: wrap; justify-content: center; max-width: 32px; }
-    .day-dot { width: 5px; height: 5px; border-radius: 50%; }
-
-    .summary-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .calendar-header h3 { font-size: 1rem; font-weight: 700; text-transform: capitalize; }
+    .cal-nav { background: rgba(255,255,255,0.08); border: none; color: #fff; border-radius: 10px; width: 32px; height: 32px; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+    .cal-nav:hover { background: rgba(255,255,255,0.18); }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .cal-day-name { font-size: 0.65rem; color: rgba(255,255,255,0.3); padding: 4px 0; text-transform: uppercase; letter-spacing: 1px; }
+    .cal-day {
+      aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent;
+      background: rgba(255,255,255,0.03);
+    }
+    .cal-day:hover:not(.empty):not(.past) { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+    .cal-day.empty { cursor: default; background: transparent; }
+    .cal-day.past { opacity: 0.2; cursor: not-allowed; }
+    .cal-day.selected { background: var(--sel-color, #4d96ff); border-color: var(--sel-color, #4d96ff); color: #fff; font-weight: 700; }
+    .cal-day.others-selected { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
+    .cal-day.all-selected { background: linear-gradient(135deg, #6bcb77, #4d96ff); border-color: #6bcb77; color: #fff; font-weight: 900; }
+    .dot-row { display: flex; gap: 2px; justify-content: center; margin-top: 2px; flex-wrap: wrap; }
+    .dot { width: 4px; height: 4px; border-radius: 50%; }
+    .save-btn {
+      width: 100%; margin-top: 16px; padding: 14px; border-radius: 14px; border: none;
+      background: linear-gradient(90deg, #4d96ff, #6bcb77); color: #fff; font-weight: 800;
+      font-size: 1rem; cursor: pointer; letter-spacing: 1px; transition: opacity 0.2s, transform 0.2s;
+    }
+    .save-btn:hover { opacity: 0.85; transform: translateY(-2px); }
+    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
     .summary-pill {
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 30px; padding: 8px 16px; display: flex; align-items: center; gap: 10px;
-      font-size: 0.85rem;
+      background: rgba(107,203,119,0.12); border: 1px solid rgba(107,203,119,0.3);
+      border-radius: 12px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;
     }
-    .pill-date { color: rgba(255,255,255,0.7); }
-    .pill-count { color: #6bcb77; font-weight: 700; }
-
-    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .pill-date { font-size: 0.82rem; color: rgba(255,255,255,0.8); }
+    .pill-count { font-size: 0.75rem; font-weight: 700; color: #6bcb77; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     @media (max-width: 500px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
-    .gallery-slot {
-      aspect-ratio: 1; border-radius: 16px; background: rgba(255,255,255,0.04);
-      border: 2px dashed rgba(255,255,255,0.12); display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 6px; cursor: pointer;
-      transition: all 0.2s; font-size: 0.75rem; color: rgba(255,255,255,0.3);
-      overflow: hidden; position: relative;
+    .gallery-slot { border-radius: 14px; overflow: hidden; aspect-ratio: 4/3; }
+    .gallery-slot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+    .gallery-slot img:hover { transform: scale(1.04); }
+    .share-btn {
+      display: flex; align-items: center; gap: 8px; margin: 0 auto;
+      padding: 13px 28px; border-radius: 14px; border: none;
+      background: linear-gradient(90deg, #25D366, #128C7E); color: #fff;
+      font-weight: 800; font-size: 0.95rem; cursor: pointer; letter-spacing: 0.5px;
+      transition: opacity 0.2s, transform 0.2s;
     }
-    .gallery-slot:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08); }
-    .gallery-slot.drag-over { border-color: #4d96ff; background: rgba(77,150,255,0.1); }
-    .gallery-slot.has-photo { border-style: solid; border-color: rgba(255,255,255,0.15); cursor: default; }
-    .gallery-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .gallery-remove {
-      position: absolute; top: 6px; right: 6px; width: 22px; height: 22px;
-      background: rgba(0,0,0,0.7); border-radius: 50%; font-size: 0.65rem;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      opacity: 0; transition: opacity 0.2s; color: #fff;
-    }
-    .gallery-slot:hover .gallery-remove { opacity: 1; }
-    .add-icon { font-size: 1.8rem; }
-
-    #toast {
+    .share-btn:hover { opacity: 0.85; transform: translateY(-2px); }
+    .toast {
       position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: rgba(30,30,50,0.95); border: 1px solid rgba(255,255,255,0.15);
-      color: #fff; padding: 12px 24px; border-radius: 40px; font-size: 0.9rem;
-      opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 999; white-space: nowrap;
+      background: rgba(30,30,50,0.97); border: 1px solid rgba(255,255,255,0.12);
+      color: #fff; padding: 12px 24px; border-radius: 14px; font-size: 0.9rem;
+      opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 999; white-space: nowrap;
     }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    .sync-bar {
-      text-align: center; font-size: 0.75rem; color: rgba(255,255,255,0.3);
-      margin-bottom: 20px; letter-spacing: 1px;
-    }
-    .sync-bar span { color: #6bcb77; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
 <div class="hero">
   <h1>🌴 Vacances Dream Team</h1>
-  <p>Trouvez les dates parfaites ensemble</p>
+  <p>Cet été, on s'envoie en enfer</p>
 </div>
 
-<div class="sync-bar" id="sync-bar">Synchronisation… ⏳</div>
+<div class="github-status" id="github-status">
+  <div class="dot-status" id="status-dot"></div>
+  <span id="github-status-text">Connexion à GitHub...</span>
+</div>
 
 <div class="section">
-  <div class="section-title">👥 Qui es-tu ?</div>
+  <div class="section-title">T'es qui ?</div>
   <div class="profiles-grid" id="profiles-grid"></div>
 </div>
 
-<div class="section" id="cal-section" style="display:none">
-  <div class="section-title">📅 Tes disponibilités — <span id="active-name"></span></div>
+<div class="section" id="calendar-section" style="display:none">
+  <div class="section-title" id="calendar-title">📅 Tes dispos — Août 2026</div>
   <div class="calendar-wrap">
-    <div class="cal-month" id="cal-month"></div>
-    <div class="cal-header">
-      <span>Lu</span><span>Ma</span><span>Me</span><span>Je</span><span>Ve</span><span>Sa</span><span>Di</span>
+    <div class="calendar-header">
+      <button class="cal-nav" id="cal-prev">‹</button>
+      <h3 id="cal-month-label"></h3>
+      <button class="cal-nav" id="cal-next">›</button>
     </div>
-    <div class="cal-grid" id="cal-grid"></div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    <button class="save-btn" id="save-btn" onclick="saveDates()">💾 Sauvegarder mes dates</button>
   </div>
 </div>
 
 <div class="section">
-  <div class="section-title">🟢 Dates où tout le monde est dispo</div>
-  <div class="summary-pills" id="summary-pills"></div>
+  <div class="section-title">✅ Dates où tout le monde est dispo</div>
+  <div id="summary-container"><div style="color:rgba(255,255,255,0.3);font-size:0.85rem">Sélectionnez vos dates pour voir les correspondances…</div></div>
 </div>
 
 <div class="section">
-  <div class="section-title">📸 Galerie souvenirs</div>
+  <div class="section-title">📸 Nos souvenirs</div>
   <div class="gallery-grid" id="gallery-grid"></div>
 </div>
 
-<input type="file" id="global-file-input" class="file-input" accept="image/*" />
-<input type="file" id="gallery-file-input" class="file-input" accept="image/*" multiple />
+<div class="section" style="text-align:center">
+  <button class="share-btn" onclick="shareLink()">
+    <span>📲</span> Partager le lien à la team
+  </button>
+</div>
 
-<div id="toast"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ─────────────────────────────────────────
-// CONFIG GITHUB
-// ─────────────────────────────────────────
-const GH_OWNER  = 'Quentib';
-const GH_REPO   = 'vacances-dream-team';
-const GH_TOKEN  = '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';
-const GH_FILE   = 'dates.json';
-const GH_BRANCH = 'main';
+const REPO_OWNER = 'Quentib';
+const REPO_NAME  = 'vacances-dream-team';
+const FILE_PATH  = 'dates.json';
+const GH_TOKEN   = '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';
+const RAW        = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/`;
 
-// ─────────────────────────────────────────
-// PARTICIPANTS
-// ─────────────────────────────────────────
 const PEOPLE = [
-  { name: 'Quentin', color: '#ff6b6b', colorDark: '#c0392b' },
-  { name: 'Théo',    color: '#ffd93d', colorDark: '#b7950b' },
-  { name: 'Amine',   color: '#6bcb77', colorDark: '#1e8449' },
-  { name: 'Rayan',   color: '#4d96ff', colorDark: '#1a5276' },
+  { name: 'Quentin', color: '#4d96ff', glow: 'rgba(77,150,255,0.4)', photo: RAW + 'Quentin.jpeg' },
+  { name: 'Gabriel', color: '#ff6b6b', glow: 'rgba(255,107,107,0.4)', photo: RAW + 'Gabriel.jpeg' },
+  { name: 'Mathis',  color: '#ffd93d', glow: 'rgba(255,217,61,0.4)',  photo: RAW + 'Mathis.jpeg'  },
+  { name: 'Vincent', color: '#6bcb77', glow: 'rgba(107,203,119,0.4)', photo: RAW + 'Vincent.jpeg' },
 ];
 
-// ─────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────
-let activeIndex    = null;
-let selections     = {};   // { "Quentin": ["2025-07-10", ...], ... }
-let profilePhotos  = {};
-let galleryPhotos  = [];
-let pendingPhotoTarget = null;
-let ghFileSha      = null;
+const GALLERY_PHOTOS = [
+  RAW + 'Vincent%20Mathis.jpeg',
+  RAW + 'Pool%20party.jpeg',
+  RAW + 'Muscle%20Vincent.jpeg',
+  RAW + 'Mathis%20et%20Gabriel.jpeg',
+  RAW + 'La%20Dream%20Team.jpeg',
+  RAW + 'Resto.jpeg',
+];
 
-PEOPLE.forEach(p => selections[p.name] = []);
+let currentUser  = null;
+let selections   = {};
+let fileSha      = null;
+let calYear      = 2026;
+let calMonth     = 7; // 0-indexed = août
 
-// ─────────────────────────────────────────
-// GITHUB API
-// ─────────────────────────────────────────
-async function ghLoad() {
-  try {
-    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`, {
-      headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }
-    });
-    if (!r.ok) throw new Error('Fichier introuvable');
-    const json = await r.json();
-    ghFileSha = json.sha;
-    const data = JSON.parse(atob(json.content.replace(/\n/g, '')));
-    if (data.selections) selections = data.selections;
-    PEOPLE.forEach(p => { if (!selections[p.name]) selections[p.name] = []; });
-    document.getElementById('sync-bar').innerHTML = 'Synchronisé avec GitHub ✅ <span>' + new Date().toLocaleTimeString('fr-FR') + '</span>';
-  } catch(e) {
-    document.getElementById('sync-bar').innerHTML = '⚠️ Impossible de charger depuis GitHub';
-    console.error(e);
-  }
+// ─── GITHUB ───
+async function ghGet() {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+  const r = await fetch(url, { headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }});
+  if (!r.ok) throw new Error('GET failed');
+  const json = await r.json();
+  fileSha = json.sha;
+  return JSON.parse(atob(json.content.replace(/\n/g,'')));
 }
 
-async function ghSave() {
-  document.getElementById('sync-bar').innerHTML = 'Sauvegarde… ⏳';
-  try {
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ selections }, null, 2))));
-    const body = { message: 'MAJ disponibilités', content, branch: GH_BRANCH };
-    if (ghFileSha) body.sha = ghFileSha;
-    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, {
-      method: 'PUT',
-      headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) throw new Error(await r.text());
-    const json = await r.json();
-    ghFileSha = json.content.sha;
-    document.getElementById('sync-bar').innerHTML = 'Synchronisé avec GitHub ✅ <span>' + new Date().toLocaleTimeString('fr-FR') + '</span>';
-    showToast('✅ Sauvegardé !');
-  } catch(e) {
-    document.getElementById('sync-bar').innerHTML = '⚠️ Erreur de sauvegarde';
-    showToast('❌ Erreur de sauvegarde');
-    console.error(e);
-  }
+async function ghPut(data) {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+  const body = { message: `Update dispos`, content: btoa(JSON.stringify(data, null, 2)), sha: fileSha };
+  const r = await fetch(url, { method: 'PUT', headers: { Authorization: `token ${GH_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error('PUT failed');
+  const json = await r.json();
+  fileSha = json.content.sha;
 }
 
-// ─────────────────────────────────────────
-// LOCAL STORAGE (photos uniquement)
-// ─────────────────────────────────────────
-function saveStorage() {
-  localStorage.setItem('vdt_photos', JSON.stringify(profilePhotos));
-  localStorage.setItem('vdt_gallery', JSON.stringify(galleryPhotos));
-}
-function loadStorage() {
-  try { profilePhotos = JSON.parse(localStorage.getItem('vdt_photos') || '{}'); } catch(e) { profilePhotos = {}; }
-  try { galleryPhotos = JSON.parse(localStorage.getItem('vdt_gallery') || '[]'); } catch(e) { galleryPhotos = []; }
-}
-
-// ─────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────
+// ─── INIT ───
 async function init() {
-  loadStorage();
+  setStatus('loading');
+  try {
+    const data = await ghGet();
+    selections = data.selections || {};
+    setStatus('ok');
+  } catch(e) {
+    setStatus('err');
+  }
   renderProfiles();
   renderGallery();
-  await ghLoad();
-  renderProfiles();
   renderSummary();
 }
 
-// ─────────────────────────────────────────
-// PROFILES
-// ─────────────────────────────────────────
+function setStatus(s) {
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('github-status-text');
+  dot.className = 'dot-status ' + s;
+  if (s === 'loading') text.textContent = 'Connexion à GitHub…';
+  if (s === 'ok')      text.textContent = 'Synchronisé avec GitHub ✓';
+  if (s === 'err')     text.textContent = 'Hors ligne — vérifiez le token/dates.json';
+}
+
+// ─── PROFILES ───
 function renderProfiles() {
   const grid = document.getElementById('profiles-grid');
   grid.innerHTML = '';
-  PEOPLE.forEach((p, i) => {
+  PEOPLE.forEach(p => {
+    const hasDates = (selections[p.name] || []).length > 0;
+    const isMe = currentUser && currentUser.name === p.name;
     const card = document.createElement('div');
-    card.className = 'profile-card' + (activeIndex === i ? ' selected' : '');
+    card.className = 'profile-card' + (isMe ? ' active-user' : '');
     card.style.setProperty('--color', p.color);
-    card.style.setProperty('--color-dark', p.colorDark);
-    const photo = profilePhotos[p.name.toLowerCase()];
-    const avatarHTML = photo
-      ? `<img class="avatar-img" src="${photo}" alt="${p.name}" />`
-      : `<div class="avatar-initial">${p.name[0]}</div>`;
-    const days = selections[p.name] ? selections[p.name].length : 0;
+    card.style.setProperty('--color-glow', p.glow);
     card.innerHTML = `
-      <div class="avatar-wrap">
-        ${avatarHTML}
-        <div class="change-photo-btn" title="Changer la photo">📷</div>
-      </div>
+      ${isMe ? '<span class="you-label">TOI</span>' : ''}
+      <img class="profile-avatar" src="${p.photo}" alt="${p.name}" />
       <div class="profile-name">${p.name}</div>
-      <div class="profile-days">${days} jour${days>1?'s':''} sélectionné${days>1?'s':''}</div>
-      <div class="profile-color-bar"></div>
+      <div class="profile-badge ${hasDates ? 'done' : ''}">${hasDates ? '✅ Dispo renseignée' : '⏳ En attente'}</div>
+      <div class="profile-dates-count">${(selections[p.name]||[]).length} jour(s) sélectionné(s)</div>
     `;
-    card.querySelector('.change-photo-btn').addEventListener('click', e => {
-      e.stopPropagation();
-      pendingPhotoTarget = 'profile_' + i;
-      document.getElementById('global-file-input').click();
-    });
-    card.addEventListener('click', () => selectProfile(i));
+    card.onclick = () => selectUser(p);
     grid.appendChild(card);
   });
 }
 
-function selectProfile(i) {
-  activeIndex = (activeIndex === i) ? null : i;
+function selectUser(p) {
+  currentUser = p;
+  document.getElementById('calendar-section').style.display = 'block';
+  document.getElementById('calendar-title').textContent = `📅 ${p.name} — tes dispos en août 2026`;
+  document.getElementById('calendar-section').scrollIntoView({ behavior: 'smooth' });
+  renderCalendar();
   renderProfiles();
-  const sec = document.getElementById('cal-section');
-  if (activeIndex !== null) {
-    sec.style.display = 'block';
-    document.getElementById('active-name').textContent = PEOPLE[activeIndex].name;
-    document.documentElement.style.setProperty('--active-color', PEOPLE[activeIndex].color);
-    renderCalendar();
-  } else {
-    sec.style.display = 'none';
-  }
 }
 
-// ─────────────────────────────────────────
-// CALENDAR
-// ─────────────────────────────────────────
-const YEAR = 2025;
-const MONTH = 6; // juillet (0-indexé)
-
+// ─── CALENDAR ───
 function renderCalendar() {
-  if (activeIndex === null) return;
-  const person = PEOPLE[activeIndex];
-  const myDates = selections[person.name];
-  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  document.getElementById('cal-month').textContent = `${monthNames[MONTH]} ${YEAR}`;
-  const grid = document.getElementById('cal-grid');
+  const label = document.getElementById('cal-month-label');
+  const grid  = document.getElementById('calendar-grid');
+  const date  = new Date(calYear, calMonth, 1);
+  label.textContent = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  let startDay = date.getDay(); // 0=dim
+  startDay = startDay === 0 ? 6 : startDay - 1; // lundi=0
+
+  const myDates   = new Set(selections[currentUser.name] || []);
+  const today     = new Date(); today.setHours(0,0,0,0);
+
+  const dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   grid.innerHTML = '';
-  const firstDay = new Date(YEAR, MONTH, 1).getDay();
-  const offset = (firstDay === 0) ? 6 : firstDay - 1;
-  const daysInMonth = new Date(YEAR, MONTH + 1, 0).getDate();
-  const today = new Date(); today.setHours(0,0,0,0);
-  for (let i = 0; i < offset; i++) {
-    const e = document.createElement('div'); e.className = 'day empty'; grid.appendChild(e);
-  }
+  dayNames.forEach(d => { grid.innerHTML += `<div class="cal-day-name">${d}</div>`; });
+
+  for (let i = 0; i < startDay; i++) grid.innerHTML += `<div class="cal-day empty"></div>`;
+
   for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(YEAR, MONTH, d);
-    const key = `${YEAR}-${String(MONTH+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const cell = document.createElement('div');
-    cell.className = 'day';
-    const isPast = date < today;
-    const isToday = date.getTime() === today.getTime();
-    const isMine = myDates.includes(key);
-    const allCount = PEOPLE.filter(p => selections[p.name] && selections[p.name].includes(key)).length;
-    const isFull = allCount === PEOPLE.length;
-    if (isPast) cell.classList.add('past');
-    if (isToday) cell.classList.add('today');
-    if (isMine) cell.classList.add('selected-day');
-    if (isFull) cell.classList.add('full-match');
-    cell.style.setProperty('--active-color', person.color);
-    const dots = PEOPLE.filter(p => selections[p.name] && selections[p.name].includes(key))
-      .map(p => `<div class="day-dot" style="background:${p.color}"></div>`).join('');
-    cell.innerHTML = `${d}<div class="day-dots">${dots}</div>`;
-    if (!isPast) cell.addEventListener('click', () => toggleDay(key));
-    grid.appendChild(cell);
+    const key  = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const thisDate = new Date(calYear, calMonth, d);
+    const isPast   = thisDate < today;
+    const isMine   = myDates.has(key);
+    const othersCount = PEOPLE.filter(p => p.name !== currentUser.name && (selections[p.name]||[]).includes(key)).length;
+    const isAll    = isMine && othersCount === PEOPLE.length - 1;
+
+    let cls = 'cal-day';
+    if (isPast)  cls += ' past';
+    else if (isAll)   cls += ' all-selected';
+    else if (isMine)  cls += ' selected';
+    else if (othersCount > 0) cls += ' others-selected';
+
+    const dots = PEOPLE.filter(p => p.name !== currentUser.name && (selections[p.name]||[]).includes(key))
+      .map(p => `<div class="dot" style="background:${p.color}"></div>`).join('');
+
+    const div = document.createElement('div');
+    div.className = cls;
+    div.style.setProperty('--sel-color', currentUser.color);
+    div.innerHTML = `${d}${dots ? `<div class="dot-row">${dots}</div>` : ''}`;
+    if (!isPast) div.onclick = () => toggleDay(key);
+    grid.appendChild(div);
   }
 }
 
 function toggleDay(key) {
-  if (activeIndex === null) return;
-  const name = PEOPLE[activeIndex].name;
-  const arr = selections[name];
+  const arr = selections[currentUser.name] || [];
   const idx = arr.indexOf(key);
-  if (idx >= 0) arr.splice(idx, 1);
-  else arr.push(key);
+  if (idx >= 0) arr.splice(idx, 1); else arr.push(key);
+  selections[currentUser.name] = arr;
   renderCalendar();
-  renderProfiles();
   renderSummary();
-  ghSave();
+  renderProfiles();
 }
 
-// ─────────────────────────────────────────
-// SUMMARY
-// ─────────────────────────────────────────
+document.getElementById('cal-prev').onclick = () => { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); };
+document.getElementById('cal-next').onclick = () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); };
+
+// ─── SAVE ───
+async function saveDates() {
+  if (!currentUser) return;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = '⏳ Sauvegarde en cours…';
+  try {
+    await ghPut({ selections });
+    showToast(`✅ Dates de ${currentUser.name} sauvegardées sur GitHub !`);
+    btn.textContent = '✅ Sauvegardé !';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '💾 Sauvegarder mes dates'; }, 3000);
+  } catch(e) {
+    showToast('❌ Erreur de sauvegarde — vérifie le token');
+    btn.disabled = false; btn.textContent = '💾 Sauvegarder mes dates';
+  }
+}
+
+// ─── SUMMARY ───
 function renderSummary() {
-  const container = document.getElementById('summary-pills');
-  const allDates = new Set(PEOPLE.flatMap(p => selections[p.name] || []));
-  const matches = [];
+  const container = document.getElementById('summary-container');
+  const allDates  = new Set(PEOPLE.flatMap(p => selections[p.name] || []));
+  const matches   = [];
   allDates.forEach(key => {
-    const count = PEOPLE.filter(p => selections[p.name] && selections[p.name].includes(key)).length;
-    if (count === PEOPLE.length) matches.push(key);
+    if (PEOPLE.every(p => (selections[p.name]||[]).includes(key))) matches.push(key);
   });
   matches.sort();
   if (matches.length === 0) {
     container.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem">Aucune date commune pour l\'instant…</div>';
     return;
   }
-  container.innerHTML = '';
-  matches.forEach(key => {
+  container.innerHTML = '<div class="summary-grid">' + matches.map(key => {
     const [y,m,d] = key.split('-');
-    const date = new Date(+y, +m-1, +d);
-    const label = date.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'long' });
-    const max = PEOPLE.filter(p => selections[p.name] && selections[p.name].includes(key)).length;
-    container.innerHTML += `<div class="summary-pill"><span class="pill-date">${label}</span><span class="pill-count">${max}/${PEOPLE.length} 🟢</span></div>`;
-  });
+    const label = new Date(+y,+m-1,+d).toLocaleDateString('fr-FR',{ weekday:'short', day:'numeric', month:'long', year:'numeric' });
+    return `<div class="summary-pill"><span class="pill-date">${label}</span><span class="pill-count">4/4 🟢</span></div>`;
+  }).join('') + '</div>';
 }
 
-// ─────────────────────────────────────────
-// GALLERY
-// ─────────────────────────────────────────
-const MAX_GALLERY = 6;
-
+// ─── GALLERY ───
 function renderGallery() {
   const grid = document.getElementById('gallery-grid');
-  grid.innerHTML = '';
-  galleryPhotos.forEach((src, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'gallery-slot has-photo';
-    slot.innerHTML = `<img src="${src}" alt="souvenir" /><div class="gallery-remove" onclick="removeGalleryPhoto(${i})">✕</div>`;
-    grid.appendChild(slot);
-  });
-  const remaining = MAX_GALLERY - galleryPhotos.length;
-  for (let i = 0; i < remaining; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'gallery-slot';
-    slot.innerHTML = `<div class="add-icon">📷</div><span>Glisse une photo</span>`;
-    slot.onclick = () => { pendingPhotoTarget = 'gallery'; document.getElementById('gallery-file-input').click(); };
-    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
-    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
-    slot.addEventListener('drop', e => { e.preventDefault(); slot.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) readFileAsGallery(f); });
-    grid.appendChild(slot);
-  }
+  grid.innerHTML = GALLERY_PHOTOS.map(src =>
+    `<div class="gallery-slot"><img src="${src}" alt="souvenir" loading="lazy" /></div>`
+  ).join('');
 }
 
-function removeGalleryPhoto(idx) { galleryPhotos.splice(idx, 1); saveStorage(); renderGallery(); }
-
-function readFileAsGallery(file) {
-  const reader = new FileReader();
-  reader.onload = e => { galleryPhotos.push(e.target.result); saveStorage(); renderGallery(); showToast('📸 Photo ajoutée !'); };
-  reader.readAsDataURL(file);
+// ─── SHARE ───
+function shareLink() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('🔗 Lien copié ! Colle-le sur WhatsApp 📱');
+  }).catch(() => { prompt('Copie ce lien :', url); });
 }
 
-// ─────────────────────────────────────────
-// FILE INPUTS
-// ─────────────────────────────────────────
-function setupFileInputs() {
-  document.getElementById('global-file-input').addEventListener('change', function() {
-    const file = this.files[0]; if (!file) return;
-    if (pendingPhotoTarget && pendingPhotoTarget.startsWith('profile_')) {
-      const idx = parseInt(pendingPhotoTarget.split('_')[1]);
-      const reader = new FileReader();
-      reader.onload = e => { profilePhotos[PEOPLE[idx].name.toLowerCase()] = e.target.result; saveStorage(); renderProfiles(); showToast(`📸 Photo de ${PEOPLE[idx].name} mise à jour !`); };
-      reader.readAsDataURL(file);
-    }
-    this.value = '';
-  });
-  document.getElementById('gallery-file-input').addEventListener('change', function() {
-    [...this.files].forEach(readFileAsGallery); this.value = '';
-  });
-  document.getElementById('profiles-grid').addEventListener('dragover', e => e.preventDefault());
-  document.getElementById('profiles-grid').addEventListener('drop', e => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (!file || !file.type.startsWith('image/')) return;
-    const card = e.target.closest('.profile-card');
-    if (!card) return;
-    const idx = [...document.querySelectorAll('.profile-card')].indexOf(card);
-    if (idx < 0) return;
-    const reader = new FileReader();
-    reader.onload = ev => { profilePhotos[PEOPLE[idx].name.toLowerCase()] = ev.target.result; saveStorage(); renderProfiles(); showToast(`📸 Photo de ${PEOPLE[idx].name} mise à jour !`); };
-    reader.readAsDataURL(file);
-  });
-}
-
-// ─────────────────────────────────────────
-// TOAST
-// ─────────────────────────────────────────
+// ─── TOAST ───
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
 init();
-setupFileInputs();
 </script>
 </body>
 </html>
